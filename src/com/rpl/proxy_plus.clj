@@ -1,11 +1,13 @@
 (ns com.rpl.proxy-plus
-  (:require [com.rpl [asm :as asm]])
-  (:import [java.util Map]
-           [clojure.lang IFn]
-           [java.lang.reflect Modifier Constructor Method])
-  )
+  (:require
+   [com.rpl.asm :as asm])
+  (:import
+   [clojure.lang IFn]
+   [java.lang.reflect Modifier Constructor Method]))
 
-(defmacro dofor-indexed [[b aseq] & body]
+(defmacro dofor-indexed
+  {:clj-kondo/lint-as 'clojure.core/let}
+  [[b aseq] & body]
   `(->> ~aseq
         (map-indexed (fn [~@b] ~@body))
         doall))
@@ -15,25 +17,23 @@
     (partition-when keyword? [:a 1 2 3 :b :c 4 5] => [[:a 1 2 3] [:b] [:c 4 5]])"
   [f coll]
   (let [[all curr] (reduce
-                      (fn [[all curr] elem]
-                        (if (f elem)
-                          [(if (some? curr) (conj all curr) all) [elem]]
-                          [all (conj (if curr curr []) elem)]
-                          ))
-                      [[] nil]
-                      coll
-                      )]
-    (if (empty? curr) all (conj all curr))
-    ))
+                    (fn [[all curr] elem]
+                      (if (f elem)
+                        [(if (some? curr) (conj all curr) all) [elem]]
+                        [all (conj (if curr curr []) elem)]))
+                    [[] nil]
+                    coll)]
+    (if (empty? curr) all (conj all curr))))
 
-(defmacro dofor [& body]
+(defmacro dofor
+  {:clj-kondo/lint-as 'clojure.core/for}
+  [& body]
   `(doall (for ~@body)))
 
 (defn- resolve! [sym]
   (if-let [ret (resolve sym)]
     ret
-    (throw (ex-info "Could not resolve symbol" {:sym sym}))
-    ))
+    (throw (ex-info "Could not resolve symbol" {:sym sym}))))
 
 (defn- get-super-and-interfaces [bases]
   (if (or (empty? bases) (.isInterface ^Class (first bases)))
@@ -44,65 +44,59 @@
   (if-not klass
     []
     (concat
-      (get-protected-methods (.getSuperclass klass))
-      (filter
-        (fn [^Method m] (Modifier/isProtected (.getModifiers m)))
-        (.getDeclaredMethods klass)
-        ))))
+     (get-protected-methods (.getSuperclass klass))
+     (filter
+      (fn [^Method m] (Modifier/isProtected (.getModifiers m)))
+      (.getDeclaredMethods klass)))))
 
 (defn- tag-matches [tag param-class]
   (or
    (nil? tag)
    (let [compare-class
-     (case tag
+         (case tag
        ;; map primitive type hints to their equivalent classes
-       byte Byte/TYPE
-       short Short/TYPE
-       int Integer/TYPE
-       long Long/TYPE
-       float Float/TYPE
-       double Double/TYPE
-       boolean Boolean/TYPE
-       char Character/TYPE
-       bytes (type (byte-array []))
-       shorts (type (short-array []))
-       ints (type (int-array []))
-       longs (type (long-array []))
-       floats (type (float-array []))
-       doubles (type (double-array []))
-       booleans (type (boolean-array []))
-       chars (type (char-array []))
-       (resolve tag) ; default, just return the resolved tag (which should be a Class)
-       )]
+           byte Byte/TYPE
+           short Short/TYPE
+           int Integer/TYPE
+           long Long/TYPE
+           float Float/TYPE
+           double Double/TYPE
+           boolean Boolean/TYPE
+           char Character/TYPE
+           bytes (type (byte-array []))
+           shorts (type (short-array []))
+           ints (type (int-array []))
+           longs (type (long-array []))
+           floats (type (float-array []))
+           doubles (type (double-array []))
+           booleans (type (boolean-array []))
+           chars (type (char-array []))
+           (resolve tag) ; default, just return the resolved tag (which should be a Class)
+           )]
      (when (nil? compare-class)
        (throw (ex-info (str "Type hint "
                             tag
                             " resolved to nil. Make sure that type is imported!")
                        {})))
-     (.isAssignableFrom param-class compare-class))
-  )
-)
+     (.isAssignableFrom param-class compare-class))))
 
 (defn- type-hints-match [l1 l2]
   (and (= (count l1) (count l2))
-  (let [[l1h & l1t] l1
-        [l2h & l2t] l2]
-      (and
-        (tag-matches l1h l2h)
-        (or (empty? l1t) (type-hints-match l1t l2t))
-      ))
-))
+       (let [[l1h & l1t] l1
+             [l2h & l2t] l2]
+         (and
+          (tag-matches l1h l2h)
+          (or (empty? l1t) (type-hints-match l1t l2t))))))
 
 (defn- find-matching-method [^Class klass method-name all-param-types]
   (let [matching (filter
-                    (fn [^Method m]
-                      (and (= (.getName m) method-name)
-                           (type-hints-match (rest all-param-types)
-                                             (-> m .getParameterTypes))
-                           ))
-                    (concat
-                      (get-protected-methods klass)
-                      (.getMethods klass)))]
+                  (fn [^Method m]
+                    (and (= (.getName m) method-name)
+                         (type-hints-match (rest all-param-types)
+                                           (-> m .getParameterTypes))))
+                  (concat
+                   (get-protected-methods klass)
+                   (.getMethods klass)))]
     (cond
       ;; there was more than one match, but the last one is the one that is
       ;; closest to the base class we specified in the proxy+ decl block, so
@@ -114,9 +108,7 @@
       (throw (ex-info "No matching methods" {:base klass :name method-name}))
 
       :else
-      (first matching)
-      )))
-
+      (first matching))))
 
 (defn- box-arg [ga klass]
   (let [[klass meth]
@@ -146,13 +138,11 @@
           [Character (asm/desc->method "Character valueOf(char)")]
 
           :else
-          (throw (ex-info "Unexpected primitive type" {:class klass}))
-          )]
+          (throw (ex-info "Unexpected primitive type" {:class klass})))]
     (asm/invoke-static
-      ga
-      klass
-      meth
-      )))
+     ga
+     klass
+     meth)))
 
 (defn- unbox-arg [ga klass]
   (let [[klass meth]
@@ -182,14 +172,12 @@
           [Character (asm/desc->method "char charValue()")]
 
           :else
-          (throw (ex-info "Unexpected primitive type" {:class klass}))
-          )]
+          (throw (ex-info "Unexpected primitive type" {:class klass})))]
     (asm/check-cast ga klass)
     (asm/invoke-virtual
-      ga
-      klass
-      meth
-      )))
+     ga
+     klass
+     meth)))
 
 (defn define-proxy-class [proxy-name-sym decls]
   (let [[^Class super interfaces] (get-super-and-interfaces (mapv :base decls))
@@ -201,17 +189,16 @@
 
     ;; class declaration
     (apply asm/visit
-      cw
-      (asm/class-name->internal-name class-name)
-      (asm/type-internal-name super)
-      (mapv asm/type-internal-name interfaces))
+           cw
+           (asm/class-name->internal-name class-name)
+           (asm/type-internal-name super)
+           (mapv asm/type-internal-name interfaces))
 
     ;; generate instance fields for all fn impls. note that these will start
     ;; nil and be set to impls (with their closures!) at instantiation time.
     (doseq [{:keys [field]} (->> decls
                                  (map :override-info)
-                                 flatten)
-]
+                                 flatten)]
       (asm/visit-field cw field (asm/type-descriptor IFn)))
 
     ;; generate constructors (one per parent class constructor arity])
@@ -259,7 +246,7 @@
         ;; re-load all the arguments so we can call the clj fn impl
         (dofor-indexed [[i ^Class p] ptypes]
                        (asm/load-arg ga i)
-                       (if (.isPrimitive p)
+                       (when (.isPrimitive p)
                          (box-arg ga p)))
         ;; invoke the clj fn
         (asm/invoke-interface ga
@@ -275,10 +262,9 @@
             (unbox-arg ga rtype)
             (asm/check-cast ga rtype)))
         (asm/return-value ga)
-        (asm/end-method ga)
-        ))
+        (asm/end-method ga)))
 
-    ;; return the class
+;; return the class
     (asm/define-class
       (asm/dynamic-class-loader)
       class-name
@@ -311,21 +297,20 @@
            (rest args)])
 
         decls (dofor [[base-sym & overrides] (partition-when symbol? impls)]
-                {:base (resolve! base-sym)
+                     {:base (resolve! base-sym)
 
-                 :override-info
-                 (dofor [[method-name params & body] overrides]
-                        (let [param-types (mapv (comp :tag meta) params)
-                              sname (str method-name)
-                              field-name (munge (str (gensym sname)))
-                              impl-sym (symbol (str field-name "-impl"))]
-                          {:method-name sname
-                           :impl-sym impl-sym
-                           :impl-form `(fn ~params ~@body)
-                           :field field-name
-                           :all-param-types param-types
-                           }))
-                 })
+                      :override-info
+                      (dofor [[method-name params & body] overrides]
+                             (let [param-types (mapv (comp :tag meta) params)
+                                   sname (str method-name)
+                                   field-name (munge (str (gensym sname)))
+                                   impl-sym (symbol (str field-name "-impl"))]
+                               {:method-name sname
+                                :impl-sym impl-sym
+                                :impl-form `(fn ~params ~@body)
+                                :field field-name
+                                :all-param-types param-types}))})
+
         klass (define-proxy-class proxy-name-sym decls)
         class-name (.getName klass)]
 
@@ -334,8 +319,7 @@
                      {:tag (symbol class-name)})
           all-impls (->> decls
                          (map :override-info)
-                         flatten
-)]
+                         flatten)]
       `(let [;; declare each of the clj fn impls here. crucially, they capture
              ;; their closures at this callsite.
              ~@(->> all-impls
@@ -350,5 +334,4 @@
                 (mapv (fn [{:keys [impl-sym field]}]
                         `(set! (. ~inst-sym ~(symbol field)) ~impl-sym))))
          ;; the instance is now actually usable.
-         ~inst-sym
-         ))))
+         ~inst-sym))))

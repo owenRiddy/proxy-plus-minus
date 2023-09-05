@@ -1,34 +1,27 @@
 (ns com.rpl.asm
   (:refer-clojure :exclude
-    [cast monitor-enter monitor-exit not pop get-method])
+                  [cast monitor-enter monitor-exit not pop get-method])
   (:require [clojure.string :as str])
   (:import [rpl.shaded.org.objectweb.asm MethodVisitor
-            ClassVisitor ClassWriter
-            AnnotationVisitor Label Opcodes Type]
+            ClassVisitor ClassWriter Label Opcodes Type]
            [rpl.shaded.org.objectweb.asm.util CheckClassAdapter]
            [rpl.shaded.org.objectweb.asm.commons GeneratorAdapter Method]
-           [java.io PrintWriter]
            [clojure.lang DynamicClassLoader]
            [java.lang.reflect Field]))
-
-
 
 (defn class-name->internal-name [^String name]
   (str/replace name "." "/"))
 
-
 (defn dynamic-class-loader []
   (DynamicClassLoader.))
-
 
 (defn define-class [^DynamicClassLoader cl ^String name ^ClassWriter cw]
   (let [klass (.defineClass cl name (.toByteArray cw) nil)]
     (when *compile-files*
       (clojure.lang.Compiler/writeClassFile
-        (class-name->internal-name (.getName klass))
-        (.toByteArray cw)))
+       (class-name->internal-name (.getName klass))
+       (.toByteArray cw)))
     klass))
-
 
 ;; Constants
 
@@ -38,15 +31,25 @@
 (defn- make-static-constants [prefix ^Class klass]
   (doseq [^Field f (.getFields klass)]
     (let [name (symbol (str prefix (clojurify-name (.getName f))))]
-      (if (find-var (symbol (str *ns* "/" name)))
+      (when (find-var (symbol (str *ns* "/" name)))
         (throw (ex-info "Var for constant is already bound" {:name name})))
       (intern *ns* name (.get f f)))))
-
 
 (make-static-constants "O" Opcodes)
 (make-static-constants "T" Type)
 (make-static-constants "G" GeneratorAdapter)
 
+;; Declarations for the linter, not exhaustive. These were just bound by
+;; `make-static-constants`
+(declare OACC-ABSTRACT)
+(declare OACC-INTERFACE)
+(declare OACC-PUBLIC)
+(declare OACC-STATIC)
+(declare OACC-SUPER)
+(declare OV1-7)
+(declare TCHAR-TYPE)
+(declare TINT-TYPE)
+(declare TVOID-TYPE)
 
 ;; ClassWriter
 
@@ -57,7 +60,6 @@
   ([] (class-writer 0))
   ([flags] (ClassWriter. flags)))
 
-
 (defn check-class-adapter [cw]
   (CheckClassAdapter. cw false))
 
@@ -66,23 +68,23 @@
 
 (defn visit [^ClassVisitor cw name super-name & interfaces]
   (.visit
-    cw
-    OV1-7
-    (+ OACC-SUPER OACC-PUBLIC)
-    name
-    nil
-    super-name
-    (into-array String interfaces)))
+   cw
+   OV1-7
+   (+ OACC-SUPER OACC-PUBLIC)
+   name
+   nil
+   super-name
+   (into-array String interfaces)))
 
 (defn visit-interface [^ClassVisitor cw name & interfaces]
   (.visit
-    cw
-    OV1-7
-    (+ OACC-ABSTRACT OACC-PUBLIC OACC-INTERFACE)
-    name
-    nil
-    "java/lang/Object"
-    (into-array String interfaces)))
+   cw
+   OV1-7
+   (+ OACC-ABSTRACT OACC-PUBLIC OACC-INTERFACE)
+   name
+   nil
+   "java/lang/Object"
+   (into-array String interfaces)))
 
 (defn visit-method [^ClassVisitor cw name desc]
   (.visitMethod cw OACC-PUBLIC name desc nil nil))
@@ -105,7 +107,6 @@
 
 (defn cw-visit-end [^ClassVisitor cw]
   (.visitEnd cw))
-
 
 ;; MethodVisitor
 
@@ -149,21 +150,21 @@
 (defn visit-table-switch-insn
   [^MethodVisitor mv min max ^Label default & labels]
   (.visitTableSwitchInsn
-    mv
-    (int min)
-    (int max)
-    default
-    (into-array Label labels)))
+   mv
+   (int min)
+   (int max)
+   default
+   (into-array Label labels)))
 
 (defn visit-lookup-switch-insn
   [^MethodVisitor mv ^Label default keys->labels]
   (let [keys (map first keys->labels)
         labels (map second keys->labels)]
     (.visitLookupSwitchInsn
-      mv
-      default
-      (int-array keys)
-      (into-array Label labels))))
+     mv
+     default
+     (int-array keys)
+     (into-array Label labels))))
 
 (defn visit-multi-a-new-array-insn
   [^MethodVisitor mv desc dims]
@@ -192,7 +193,6 @@
 (defn mv-visit-end [^MethodVisitor mv]
   (.visitEnd mv))
 
-
 ;; Types
 
 (defprotocol ASMType
@@ -209,7 +209,7 @@
   (asm-type [t]
     t)
   nil
-  (asm-type [t]
+  (asm-type [_t]
     (asm-type Object)))
 
 (defn method-descriptor [ret-type & arg-types]
@@ -220,11 +220,9 @@
   (let [^Type t (asm-type atype)]
     (.getClassName t)))
 
-
 (defn type-internal-name [atype]
   (let [^Type t (asm-type atype)]
     (.getInternalName t)))
-
 
 (defn type-descriptor [class-or-type]
   (.getDescriptor ^Type (asm-type class-or-type)))
@@ -247,7 +245,6 @@
     (visit-code ret)
     ret))
 
-
 (defn array-length [^GeneratorAdapter ga]
   (.arrayLength ga))
 
@@ -266,12 +263,11 @@
 (defn catch-exception
   [^GeneratorAdapter ga ^Label start ^Label end ^Label handler t]
   (visit-try-catch-block
-    ga
-    start
-    end
-    handler
-    (type-internal-name t)))
-
+   ga
+   start
+   end
+   handler
+   (type-internal-name t)))
 
 (defn check-cast [^GeneratorAdapter ga t]
   (.checkCast ga (asm-type t)))
@@ -296,7 +292,6 @@
 
 (defn end-method [^GeneratorAdapter ga]
   (.endMethod ga))
-
 
 (defn get-field [^GeneratorAdapter ga owner-type ^String name t]
   (.getField ga (asm-type owner-type) name (asm-type t)))
@@ -375,9 +370,6 @@
 
 (defn monitor-exit [^GeneratorAdapter ga]
   (.monitorExit ga))
-
-(defn new-array [^GeneratorAdapter ga t]
-  (.newArray ga (asm-type t)))
 
 (defn new-instance [^GeneratorAdapter ga t]
   (.newInstance ga (asm-type t)))
@@ -458,9 +450,13 @@
   ([^GeneratorAdapter ga t ^String msg]
    (.throwException ga (asm-type t) msg)))
 
-(defn new-array [^GeneratorAdapter ga n t]
-  (push-int ga n)
-  (.newArray ga (asm-type t)))
+(defn new-array
+  ([^GeneratorAdapter ga t]
+   (.newArray ga (asm-type t)))
+
+  ([^GeneratorAdapter ga n t]
+   (push-int ga n)
+   (.newArray ga (asm-type t))))
 
 (defn unbox [^GeneratorAdapter ga t]
   (.unbox ga (asm-type t)))
@@ -475,21 +471,18 @@
 
 (defn get-method [ret-type n arg-types]
   (desc->method
-    (str
-      (type-class-name ret-type) " "
-      n
-      "("
-      (str/join "," (mapv type-class-name arg-types))
-      ")")))
-
+   (str
+    (type-class-name ret-type) " "
+    n
+    "("
+    (str/join "," (mapv type-class-name arg-types))
+    ")")))
 
 (defn get-constructor [arg-types]
   (get-method TVOID-TYPE "<init>" arg-types))
 
-
 (def EMPTY-CONSTRUCTOR-METHOD
   (desc->method "void <init> ()"))
-
 
 ;; Label
 

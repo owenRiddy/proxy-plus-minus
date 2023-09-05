@@ -10,6 +10,4 @@
    {:url
     "https://nexus.redplanetlabs.com/repository/maven-public-releases"}}
 
-  :profiles {:bench {:dependencies [[criterium "0.4.5"]]}
-             }
-  )
+  :profiles {:bench {:dependencies [[criterium "0.4.5"]]}})
