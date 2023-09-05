@@ -3,7 +3,6 @@
   :java-source-paths ["test/java"]
   :test-paths ["test/clj"]
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [com.rpl/specter "1.1.3"]
                  [com.rpl/rama-shaded-asm "4.2"]]
 
   :repositories
