@@ -1,9 +1,10 @@
 # proxy-plus-minus
 
-Nathan Marz built a great Proxy library called proxy+. This project is first and foremost a copy of that work. I'm aiming to make 2x major changes:
+Nathan Marz built a great Proxy library called proxy+. This project is first and foremost a copy of that work. I'm aiming to make a few significant changes:
 
-1. Rewrite it in my own code style. This is where the `minus` in the name is a factor - I'm pretty sure this will slow the code down. I want to despecialise the dependencies too.
-2. Support a (proxy-super+ ...) function/macro. Vanilla Clojure has a [crippling bug in proxy-super](https://clojure.atlassian.net/browse/CLJ-2201) and there is an opportunity here to work around it.
+1. Lint & push code towards my prefered style. This is where the `minus` in the name is a factor - I'm pretty sure this will slow the code down.
+2. Despecialise the dependencies: No specter, generic https://asm.ow2.io/ ASM libraries so that the documentation is easier to look up (although RPL's Rama project does sound interesting).
+3. Support a (proxy-super+ ...) function/macro. Vanilla Clojure has a [crippling bug in proxy-super](https://clojure.atlassian.net/browse/CLJ-2201) and there is an opportunity here to work around it.
 
 `proxy+` is a replacement for Clojure's `proxy` that's faster and more usable. `proxy` has a strange implementation where it overrides every possible method and uses a mutable field to store a map of string -> function for dispatching the methods. This causes it to be unable to handle methods with the same name but different arities.
 
