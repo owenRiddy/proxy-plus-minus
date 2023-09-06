@@ -1,4 +1,4 @@
-package com.rpl;
+package testclasses;
 
 public interface InterfaceB {
   String bar(Integer x, Integer y, Integer z);

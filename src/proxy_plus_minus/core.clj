@@ -343,5 +343,6 @@
   1. Thread safe
   2. Works only on proxy+ proxies
   "
-  [meth & args]
-  `(comment ~meth ~args))
+  {:clj-kondo/lint-as 'clojure.core/proxy-super}
+  [method & args]
+  `(comment ~method ~args))

@@ -1,4 +1,4 @@
-package com.rpl;
+package testclasses;
 
 public abstract class TestBaseClass2 extends TestBaseClass {
   public TestBaseClass2() {

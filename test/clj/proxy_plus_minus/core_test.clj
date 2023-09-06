@@ -1,9 +1,10 @@
 (ns proxy-plus-minus.core-test
   (:require
-   [clojure.test :refer [deftest is]]
-   [proxy-plus-minus.core :refer [proxy+]])
+   [clojure.test :refer [deftest is testing]]
+   [proxy-plus-minus.core :refer [proxy+ #_proxy-super+]])
   (:import
-   [com.rpl TestBaseClass TestBaseClass2 InterfaceA InterfaceB InterfaceC AbstractBaseClass2]))
+   [testclasses TestBaseClass TestBaseClass2 TestBaseClass3 InterfaceA
+    InterfaceB InterfaceC AbstractBaseClass2]))
 
 (deftest nothing-test
   (let [o (proxy+ [])
@@ -234,3 +235,39 @@
                        []
                        I6
                        (foo [_this ^SuperDuperMap m] "woo"))))))
+
+(deftest proxy-super+--test
+
+  (testing "Check TestBaseClass3"
+    (let [o
+          (proxy+ [] TestBaseClass3)]
+      (is (= 100 (.getInt o)))
+      (is (= 0.0 (.getDouble o 1 2.0 "three" (.intValue 4) false)))
+      (is (= 7.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
+      (is (= "Yes" (.getString o "Yes")))))
+
+  (testing "Check TestBaseClass3 with overrides"
+    (let [o
+          #_:clj-kondo/ignore
+          (proxy+ [] TestBaseClass3
+                  (getInt [this] (.intValue 3))
+                  (getDouble [this a b c d e] 4.0)
+                  (getString [this a] "No"))]
+      (is (= 3 (.getInt o)))
+      (is (= 4.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
+      (is (= "No" (.getString o "Yes")))))
+
+  (testing "Check proxy-super+"
+    (let [o
+          #_:clj-kondo/ignore
+          (proxy+ [] TestBaseClass3
+                  (getInt [this] (.intValue 3))
+                  (getDouble [this a b c d e] 4.0)
+                  (getString [this a] "No"))]
+      (is (= 3 (.getInt o)))
+      #_(is (= 100 (proxy-super+ getInt o)))
+      (is (= 4.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
+      #_(is (= 0.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) false)))
+      #_(is (= 7.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) true)))
+      (is (= "No" (.getString o "Yes")))
+      #_(is (= "Yes" (proxy-super+ getString o "Yes"))))))

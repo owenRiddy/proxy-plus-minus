@@ -1,4 +1,4 @@
-package com.rpl;
+package testclasses;
 
 public abstract class TestBaseClass {
   private String s;

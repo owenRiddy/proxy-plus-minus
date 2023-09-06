@@ -1,3 +1,0 @@
-{:linters
-  {:unresolved-symbol
-    {:exclude [(com.rpl.proxy-plus/proxy-super+ [method])]}}}

@@ -1,4 +1,4 @@
-package com.rpl;
+package testclasses;
 
 public interface InterfaceC {
   int baz();
