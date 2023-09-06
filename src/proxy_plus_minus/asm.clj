@@ -1,13 +1,13 @@
-(ns com.rpl.asm
+(ns proxy-plus-minus.asm
   (:refer-clojure :exclude
                   [cast monitor-enter monitor-exit not pop get-method])
   (:require [clojure.string :as str])
-  (:import [org.objectweb.asm MethodVisitor
-            ClassVisitor ClassWriter Label Opcodes Type]
-           [org.objectweb.asm.util CheckClassAdapter]
-           [org.objectweb.asm.commons GeneratorAdapter Method]
-           [clojure.lang DynamicClassLoader]
-           [java.lang.reflect Field]))
+  (:import
+   [org.objectweb.asm MethodVisitor ClassVisitor ClassWriter Label Opcodes Type]
+   [org.objectweb.asm.util CheckClassAdapter]
+   [org.objectweb.asm.commons GeneratorAdapter Method]
+   [clojure.lang DynamicClassLoader]
+   [java.lang.reflect Field]))
 
 (defn class-name->internal-name [^String name]
   (str/replace name "." "/"))

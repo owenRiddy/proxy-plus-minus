@@ -1,6 +1,6 @@
-(ns com.rpl.proxy-plus
+(ns proxy-plus-minus.core
   (:require
-   [com.rpl.asm :as asm])
+   [proxy-plus-minus.asm :as asm])
   (:import
    [clojure.lang IFn]
    [java.lang.reflect Modifier Constructor Method]))

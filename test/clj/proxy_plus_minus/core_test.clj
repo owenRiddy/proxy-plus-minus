@@ -1,7 +1,7 @@
-(ns com.rpl.proxy-plus-test
+(ns proxy-plus-minus.core-test
   (:require
    [clojure.test :refer [deftest is]]
-   [com.rpl.proxy-plus :refer [proxy+]])
+   [proxy-plus-minus.core :refer [proxy+]])
   (:import
    [com.rpl TestBaseClass TestBaseClass2 InterfaceA InterfaceB InterfaceC AbstractBaseClass2]))
 
@@ -208,7 +208,7 @@
         #_:clj-kondo/ignore
         (proxy+ my-proxy [])]
     (is (= (.getName (class o))
-           "com.rpl.proxy_plus_test.my_proxy"))))
+           "proxy_plus_minus.core_test.my_proxy"))))
 
 (definterface I6
   (^String foo [^java.util.Map m])

@@ -15,6 +15,9 @@ Nathan Marz built a great Proxy library called proxy+. This project is first and
 This library provides the macro `proxy+`. The first argument is fields to provide to the superclass's constructor. Next comes `reify`-like definitions to provide overrides.  When extending a base class, the base class should come first. Example usage:
 
 ```clj
+(ns example
+  (:require [proxy-plus-minus.core :refer [proxy+]]))
+
 (proxy+ [super-arg1 super-arg2]
   BaseClass
   (foo [this] -1)
