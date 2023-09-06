@@ -179,6 +179,8 @@
      klass
      meth)))
 
+(def ^{:private true} MAGIC_PREFIX "aad60b7e_de23_4c92_9343_4065d7f20c34_")
+
 (defn define-proxy-class [proxy-name-sym decls]
   (let [[^Class super interfaces] (get-super-and-interfaces (mapv :base decls))
 
@@ -226,45 +228,84 @@
           (asm/end-method ga))))
 
     ;; generate "real" method impls
-    (doseq [{:keys [base override-info]} decls
-            {:keys [method-name field all-param-types]} override-info]
-      (let [^Method jmeth (find-matching-method base
-                                                method-name
-                                                all-param-types)
-            rtype (.getReturnType jmeth)
-            ptypes (.getParameterTypes jmeth)
-            ga (asm/generator-adapter
-                (asm/get-method
-                 (asm/asm-type rtype)
-                 method-name
-                 ptypes)
-                cw)]
-        (asm/load-this ga)
-        ;; load the fn for the impl of this fn
-        (asm/get-field ga this-type field IFn)
-        (asm/load-this ga)
-        ;; re-load all the arguments so we can call the clj fn impl
-        (dofor-indexed [[i ^Class p] ptypes]
-                       (asm/load-arg ga i)
-                       (when (.isPrimitive p)
-                         (box-arg ga p)))
-        ;; invoke the clj fn
-        (asm/invoke-interface ga
-                              IFn
-                              (asm/get-method
-                               Object
-                               "invoke"
-                               ;; one more for "this"
-                               (repeat (-> ptypes count inc) Object)))
-        ;; manage return value if it's not void
-        (when (not= Void/TYPE rtype)
-          (if (.isPrimitive rtype)
-            (unbox-arg ga rtype)
-            (asm/check-cast ga rtype)))
-        (asm/return-value ga)
-        (asm/end-method ga)))
+    (doseq [{:keys [base override-info]}
+            decls
 
-;; return the class
+            {:keys [method-name field all-param-types]}
+            override-info]
+      (let [^Method jmeth
+            (find-matching-method base
+                                  method-name
+                                  all-param-types)
+
+            rtype
+            (.getReturnType jmeth)
+
+            ptypes
+            (.getParameterTypes jmeth)
+
+            method
+            (asm/get-method
+             (asm/asm-type rtype)
+             method-name
+             ptypes)]
+        (let [ga
+              (asm/generator-adapter
+               (asm/get-method
+                (asm/asm-type rtype)
+                method-name
+                ptypes)
+               cw)]
+          (asm/load-this ga)
+          ;; load the fn for the impl of this fn
+          (asm/get-field ga this-type field IFn)
+          (asm/load-this ga)
+          ;; re-load all the arguments so we can call the clj fn impl
+          (dofor-indexed [[i ^Class p] ptypes]
+                         (asm/load-arg ga i)
+                         (when (.isPrimitive p)
+                           (box-arg ga p)))
+          ;; invoke the clj fn
+          (asm/invoke-interface ga
+                                IFn
+                                (asm/get-method
+                                 Object
+                                 "invoke"
+                                 ;; one more for "this"
+                                 (repeat (-> ptypes count inc) Object)))
+          ;; manage return value if it's not void
+          (when (not= Void/TYPE rtype)
+            (if (.isPrimitive rtype)
+              (unbox-arg ga rtype)
+              (asm/check-cast ga rtype)))
+          (asm/return-value ga)
+          (asm/end-method ga))
+
+        ;; Expose any hidden methods
+        (let [ga
+              (asm/generator-adapter
+               (asm/get-method
+                (asm/asm-type rtype)
+                (str MAGIC_PREFIX method-name)
+                ptypes)
+               cw)]
+          (asm/load-this ga)
+          (dofor-indexed [[i ^Class _p] ptypes]
+                         (asm/load-arg ga i))
+          (asm/visit-method-insn ga asm/OINVOKESPECIAL (asm/get-internal-name super) method-name (.getDescriptor method))
+          (cond
+            (= Void/TYPE rtype)
+            nil
+
+            (.isPrimitive rtype)
+            nil
+
+            :else
+            (asm/check-cast ga rtype))
+          (asm/return-value ga)
+          (asm/end-method ga))))
+
+    ;; return the class
     (asm/define-class
       (asm/dynamic-class-loader)
       class-name
@@ -344,5 +385,6 @@
   2. Works only on proxy+ proxies
   "
   {:clj-kondo/lint-as 'clojure.core/proxy-super}
-  [method & args]
-  `(comment ~method ~args))
+  [method this & args]
+  (let [hack-method-name# (symbol (str MAGIC_PREFIX (name method)))]
+    `(. ~this ~hack-method-name# ~@args)))

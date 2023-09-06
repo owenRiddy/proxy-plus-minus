@@ -46,6 +46,7 @@
 (declare OACC-PUBLIC)
 (declare OACC-STATIC)
 (declare OACC-SUPER)
+(declare OINVOKESPECIAL)
 (declare OV1-7)
 (declare TCHAR-TYPE)
 (declare TINT-TYPE)
@@ -295,6 +296,11 @@
 
 (defn get-field [^GeneratorAdapter ga owner-type ^String name t]
   (.getField ga (asm-type owner-type) name (asm-type t)))
+
+(defn get-internal-name
+  "Eg, (get-internal-name java.lang.Object) => \"java/lang/Object\""
+  [klass]
+  (Type/getInternalName klass))
 
 (defn get-local-type [^GeneratorAdapter ga ^long local]
   (.getLocalType ga local))
