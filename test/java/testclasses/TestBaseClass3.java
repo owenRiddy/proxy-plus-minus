@@ -16,4 +16,8 @@ public class TestBaseClass3{
     public Integer getInt(){
         return 100;
     }
+
+    public int getOtherInt(){
+        return 200;
+    }
 }

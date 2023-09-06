@@ -179,7 +179,13 @@
      klass
      meth)))
 
-(def ^{:private true} MAGIC_PREFIX "aad60b7e_de23_4c92_9343_4065d7f20c34_")
+(def ^{:private true} MAGIC_PREFIX
+  "
+  I feel guilt over this. So what we do is add a set of ugly methods to each
+  proxy object that can call the superclass. We put a uuid on the front to make
+  it hard to accidently call.
+  "
+  "aad60b7e_de23_4c92_9343_4065d7f20c34_")
 
 (defn define-proxy-class [proxy-name-sym decls]
   (let [[^Class super interfaces] (get-super-and-interfaces (mapv :base decls))

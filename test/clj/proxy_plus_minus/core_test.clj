@@ -253,6 +253,7 @@
                   (getInt [this] (.intValue 3))
                   (getDouble [this a b c d e] 4.0)
                   (getString [this a] "No"))]
+      (is (= 200 (.getOtherInt o)))
       (is (= 3 (.getInt o)))
       (is (= 4.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
       (is (= "No" (.getString o "Yes")))))
