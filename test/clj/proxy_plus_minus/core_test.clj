@@ -1,7 +1,7 @@
 (ns proxy-plus-minus.core-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [proxy-plus-minus.core :refer [proxy+ #_proxy-super+]])
+   [proxy-plus-minus.core :refer [proxy+ proxy-super+]])
   (:import
    [testclasses TestBaseClass TestBaseClass2 TestBaseClass3 InterfaceA
     InterfaceB InterfaceC AbstractBaseClass2]))
@@ -265,9 +265,9 @@
                   (getDouble [this a b c d e] 4.0)
                   (getString [this a] "No"))]
       (is (= 3 (.getInt o)))
-      #_(is (= 100 (proxy-super+ getInt o)))
+      (is (= 100 (proxy-super+ getInt o)))
       (is (= 4.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
-      #_(is (= 0.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) false)))
-      #_(is (= 7.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) true)))
+      (is (= 0.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) false)))
+      (is (= 7.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) true)))
       (is (= "No" (.getString o "Yes")))
-      #_(is (= "Yes" (proxy-super+ getString o "Yes"))))))
+      (is (= "Yes" (proxy-super+ getString o "Yes"))))))
