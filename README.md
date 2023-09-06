@@ -39,4 +39,4 @@ This library provides the macro `proxy+`. The first argument is fields to provid
 
 ## License
 
-Copyright 2020 Red Planet Labs, Inc. proxy-plus is licensed under Apache License v2.0.
+Copyright 2020 Red Planet Labs, Inc. proxy-plus-minus is licensed under Apache License v2.0.
