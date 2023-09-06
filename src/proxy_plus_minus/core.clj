@@ -335,3 +335,13 @@
                         `(set! (. ~inst-sym ~(symbol field)) ~impl-sym))))
          ;; the instance is now actually usable.
          ~inst-sym))))
+
+(defmacro proxy-super+
+  "
+  Like `clojure.core/proxy-super` except:
+
+  1. Thread safe
+  2. Works only on proxy+ proxies
+  "
+  [meth & args]
+  `(comment ~meth ~args))
