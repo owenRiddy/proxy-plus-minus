@@ -16,7 +16,7 @@ This library provides the macro `proxy+`. The first argument is fields to provid
 
 ```clj
 (ns example
-  (:require [proxy-plus-minus.core :refer [proxy+]]))
+  (:require [proxy-plus-minus.core :refer [proxy+ proxy-super+]]))
 
 (proxy+ [super-arg1 super-arg2]
   BaseClass
@@ -27,8 +27,14 @@ This library provides the macro `proxy+`. The first argument is fields to provid
   (bar [this a b c] (* a b c))
 
   SomeInterface2
-  (bar [this] 100)
-  )
+  (bar [this] 100))
+
+;; TestBaseClass3 has a .getInt method that returns 100
+(let [o
+      (proxy+ []
+        TestBaseClass3
+        (getInt [this] (.intValue 3)))]
+  (is (= 100 (proxy-super+ getInt o))))
 ```
 
 ## License
