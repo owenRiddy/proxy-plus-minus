@@ -272,3 +272,18 @@
       (is (= 7.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) true)))
       (is (= "No" (.getString o "Yes")))
       (is (= "Yes" (proxy-super+ getString o "Yes"))))))
+
+(deftest proxy+-hard-signatures-test
+  (testing "Check a tricky edge case"
+    (let [o
+          #_:clj-kondo/ignore
+          (proxy+ [] TestBaseClass3
+                  ;; Impossible: "Only long and double primitives are supported"
+                  ;; (trickyCase [this ^int a b] 8)
+                  #_(trickyCase [this a b] [Integer/TYPE java.lang.String :=> Integer/TYPE] 8)
+                  ;; hard to test, but this is a demo of what an illigal method override does
+                  #_(trickyCase [this a b] [char java.lang.String :=> int] 8)
+                  (trickyCase [this a b] [int java.lang.String :=> int] 8)
+                  (trickyCase [this a b] [java.lang.Integer java.lang.String :=> int] 9))]
+      (is (= 8 (.trickyCase o ^int (.intValue 1) "Two")))
+      (is (= 9 (.trickyCase o ^java.lang.Integer (.intValue 1) "Two"))))))

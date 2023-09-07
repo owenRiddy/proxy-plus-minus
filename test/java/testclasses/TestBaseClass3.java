@@ -20,4 +20,12 @@ public class TestBaseClass3{
     public int getOtherInt(){
         return 200;
     }
+
+    public int trickyCase(int a, String b) {
+        return 6;
+    }
+
+    public int trickyCase(java.lang.Integer a, String b) {
+        return 7;
+    }
 }
