@@ -88,15 +88,29 @@
           (tag-matches l1h l2h)
           (or (empty? l1t) (type-hints-match l1t l2t))))))
 
-(defn- find-matching-method [^Class klass method-name all-param-types]
-  (let [matching (filter
-                  (fn [^Method m]
-                    (and (= (.getName m) method-name)
-                         (type-hints-match (rest all-param-types)
-                                           (-> m .getParameterTypes))))
-                  (concat
-                   (get-protected-methods klass)
-                   (.getMethods klass)))]
+(defn characterize
+  "eg, [int double java.lang.String java.lang.Integer boolean :=> double]"
+  [^Method m]
+  (-> (.getParameterTypes m)
+      vec
+      (conj :=>)
+      (conj (.getReturnType m))))
+
+(defn- find-matching-method [^Class klass method-name all-param-types hints]
+  (let [all-methods
+        (concat
+         (get-protected-methods klass)
+         (.getMethods klass))
+
+        matching
+        (filter
+         (fn [^Method m]
+           (and (= (.getName m) method-name)
+                (or
+                 (= (map str hints) (map #(if (keyword? %) ":=>" (.getTypeName %)) (characterize m)))
+                 (type-hints-match (rest all-param-types)
+                                   (-> m .getParameterTypes)))))
+         all-methods)]
     (cond
       ;; there was more than one match, but the last one is the one that is
       ;; closest to the base class we specified in the proxy+ decl block, so
@@ -105,7 +119,10 @@
       (last matching)
 
       (= (count matching) 0)
-      (throw (ex-info "No matching methods" {:base klass :name method-name}))
+      (throw (ex-info "No matching methods" {:base klass
+                                             :name method-name
+                                             :param-type (or hints all-param-types)
+                                             :param-type-options (map (juxt #(.getName %) characterize) all-methods)}))
 
       :else
       (first matching))))
@@ -238,12 +255,13 @@
     (doseq [{:keys [base override-info]}
             decls
 
-            {:keys [method-name field all-param-types]}
+            {:keys [method-name field all-param-types hints]}
             override-info]
       (let [^Method jmeth
             (find-matching-method base
                                   method-name
-                                  all-param-types)
+                                  all-param-types
+                                  hints)
 
             rtype
             (.getReturnType jmeth)
@@ -348,15 +366,33 @@
                      {:base (resolve! base-sym)
 
                       :override-info
-                      (dofor [[method-name params & body] overrides]
-                             (let [param-types (mapv (comp :tag meta) params)
-                                   sname (str method-name)
-                                   field-name (munge (str (gensym sname)))
-                                   impl-sym (symbol (str field-name "-impl"))]
+                      (dofor [[method-name params & maybe-body] overrides]
+                             (let [hints
+                                   (when (and (vector? (first maybe-body))
+                                              (seq (rest maybe-body)))
+                                     (first maybe-body))
+
+                                   body
+                                   (if hints (rest maybe-body) maybe-body)
+
+                                   param-types
+                                   (if hints
+                                     (subvec hints 0 (- (count hints) 2))
+                                     (mapv (comp :tag meta) params))
+
+                                   sname
+                                   (str method-name)
+
+                                   field-name
+                                   (munge (str (gensym sname)))
+
+                                   impl-sym
+                                   (symbol (str field-name "-impl"))]
                                {:method-name sname
                                 :impl-sym impl-sym
                                 :impl-form `(fn ~params ~@body)
                                 :field field-name
+                                :hints hints
                                 :all-param-types param-types}))})
 
         klass (define-proxy-class proxy-name-sym decls)
