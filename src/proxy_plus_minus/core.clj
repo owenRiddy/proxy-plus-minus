@@ -204,9 +204,10 @@
 
     ;; generate instance fields for all fn impls. note that these will start
     ;; nil and be set to impls (with their closures!) at instantiation time.
-    (doseq [{:keys [field]} (->> decls
-                                 (map :override-info)
-                                 flatten)]
+    (doseq [{:keys [field]}
+            (->> decls
+                 (mapv :override-info)
+                 (apply concat))]
       (asm/visit-field cw field (asm/type-descriptor IFn)))
 
     ;; generate constructors (one per parent class constructor arity])
@@ -362,11 +363,14 @@
         class-name (.getName klass)]
 
     (.importClass ^clojure.lang.Namespace *ns* klass)
-    (let [inst-sym (with-meta (gensym "inst")
-                     {:tag (symbol class-name)})
-          all-impls (->> decls
-                         (map :override-info)
-                         flatten)]
+    (let [inst-sym
+          (with-meta (gensym "inst")
+            {:tag (symbol class-name)})
+
+          all-impls
+          (->> decls
+               (mapv :override-info)
+               (apply concat))]
       `(let [;; declare each of the clj fn impls here. crucially, they capture
              ;; their closures at this callsite.
              ~@(->> all-impls
