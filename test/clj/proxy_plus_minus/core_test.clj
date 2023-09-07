@@ -279,9 +279,8 @@
           #_:clj-kondo/ignore
           (proxy+ [] TestBaseClass3
                   ;; Impossible: "Only long and double primitives are supported"
-                  ;; (trickyCase [this ^int a b] 8)
-                  #_(trickyCase [this a b] [Integer/TYPE java.lang.String :=> Integer/TYPE] 8)
-                  ;; hard to test, but this is a demo of what an illigal method override does
+                  #_(trickyCase [this ^int a b] 8)
+                  ;; hard to test, but this is a demo of what an illegal method override does
                   #_(trickyCase [this a b] [char java.lang.String :=> int] 8)
                   (trickyCase [this a b] [int java.lang.String :=> int] 8)
                   (trickyCase [this a b] [java.lang.Integer java.lang.String :=> int] 9))]
