@@ -336,20 +336,22 @@
       class-name
       cw)))
 
-(defmacro proxy+
-  "A replacement for clojure.core/proxy. Return an object implementing the class
-   and interfaces. The class will be named `ClassNameSymbol` if provided;
-   otherwise uses a unique generated name.
+(defmacro proxy+-
+  "
+  A replacement for clojure.core/proxy. Return an object implementing the class
+  and interfaces. The class will be named `ClassNameSymbol` if provided;
+  otherwise uses a unique generated name.
 
-   super-args is a (possibly empty) vector of arguments to the superclass
-   constructor.
+  super-args is a (possibly empty) vector of arguments to the superclass
+  constructor.
 
-   impl-body specifies the superclass, any interfaces, and their method
-   implementations, using the same syntax as clojure.core/proxy.
+  impl-body specifies the superclass, any interfaces, and their method
+  implementations, using the same syntax as clojure.core/proxy.
 
-   The first implementation body also specifies the superclass, if it refers to
-   a class; if it is an interface, then the superclass will be Object. All other
-   implementation bodies must refer to interfaces."
+  The first implementation body also specifies the superclass, if it refers to
+  a class; if it is an interface, then the superclass will be Object. All other
+  implementation bodies must refer to interfaces.
+  "
   {:arglists '([[super-args] & impl-body]
                [ClassNameSymbol [super-args] & impl-body])}
   [& args]
@@ -423,12 +425,12 @@
          ;; the instance is now actually usable.
          ~inst-sym))))
 
-(defmacro proxy-super+
+(defmacro proxy-super+-
   "
   Like `clojure.core/proxy-super` except:
 
   1. Thread safe
-  2. Works only on proxy+ proxies
+  2. Works only on proxy+- proxies
   "
   {:clj-kondo/lint-as 'clojure.core/proxy-super}
   [method this & args]

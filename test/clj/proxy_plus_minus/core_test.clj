@@ -1,14 +1,14 @@
 (ns proxy-plus-minus.core-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [proxy-plus-minus.core :refer [proxy+ proxy-super+]])
+   [proxy-plus-minus.core :refer [proxy+- proxy-super+-]])
   (:import
    [testclasses TestBaseClass TestBaseClass2 TestBaseClass3 InterfaceA
     InterfaceB InterfaceC AbstractBaseClass2]))
 
 (deftest nothing-test
-  (let [o (proxy+ [])
-        o2 (proxy+ [] Object)]
+  (let [o (proxy+- [])
+        o2 (proxy+- [] Object)]
     (is (instance? Object o))
     (is (not= (class o) Object))
     (is (instance? Object o2))
@@ -17,11 +17,11 @@
 (deftest base-class-test
   (let [o
         #_:clj-kondo/ignore
-        (proxy+ ["a"]
-                TestBaseClass
-                (foo [this s] (count s))
-                (doSomething [this c l s d]
-                             (str c l s d)))]
+        (proxy+- ["a"]
+                 TestBaseClass
+                 (foo [this s] (count s))
+                 (doSomething [this c l s d]
+                              (str c l s d)))]
     (is (instance? TestBaseClass o))
     (is (= "a 11" (.getVal o)))
     (is (= "a1024.5" (.doSomething o \a 10 2 4.5)))
@@ -33,7 +33,7 @@
 (deftest multiple-levels-of-base-classes-test
   (let [_o
         #_:clj-kondo/ignore
-        (proxy+
+        (proxy+-
          []
          AbstractBaseClass2
          (foo [_this ^Integer x ^String y])
@@ -56,13 +56,13 @@
 
         o
         #_:clj-kondo/ignore
-        (proxy+ []
-                I1
-                (foo [this l l2] (str (+ l l2)))
-                (bar [this o] (vswap! v inc))
-                I2
-                (foo [this] 99)
-                (car [this] (vswap! v #(* 10 %))))]
+        (proxy+- []
+                 I1
+                 (foo [this l l2] (str (+ l l2)))
+                 (bar [this o] (vswap! v inc))
+                 I2
+                 (foo [this] 99)
+                 (car [this] (vswap! v #(* 10 %))))]
     (is (instance? I1 o))
     (is (instance? I2 o))
     (is (= "13" (.foo o 10 3)))
@@ -79,11 +79,11 @@
 
         o
         #_:clj-kondo/ignore
-        (proxy+ []
-                TestBaseClass
-                (foo2 [this] (vswap! v inc))
-                I1
-                (bar [this o] (vreset! v o) (str o "!")))]
+        (proxy+- []
+                 TestBaseClass
+                 (foo2 [this] (vswap! v inc))
+                 I1
+                 (bar [this o] (vreset! v o) (str o "!")))]
     (is (instance? TestBaseClass o))
     (is (instance? I1 o))
     (is (not (instance? I2 o)))
@@ -94,12 +94,12 @@
     (is (= "a" @v))))
 
 (deftest super-args-test
-  (let [o (proxy+ []
-                  TestBaseClass)
-        o2 (proxy+ ["bbb"]
+  (let [o (proxy+- []
                    TestBaseClass)
-        o3 (proxy+ ["z" -1]
-                   TestBaseClass)]
+        o2 (proxy+- ["bbb"]
+                    TestBaseClass)
+        o3 (proxy+- ["z" -1]
+                    TestBaseClass)]
     (is (= "s 10" (.getVal o)))
     (is (= "bbb 11" (.getVal o2)))
     (is (= "z -1" (.getVal o3)))))
@@ -107,10 +107,10 @@
 (deftest overlapping-interfaces-test
   (let [o
         #_:clj-kondo/ignore
-        (proxy+ []
-                I1
-                (foo [this l1 l2] (str (- l1 l2)))
-                I3)
+        (proxy+- []
+                 I1
+                 (foo [this l1 l2] (str (- l1 l2)))
+                 I3)
 
         o2
         ((fn [x] x) o)]
@@ -126,10 +126,10 @@
 (deftest multiple-arity-same-method-name-test
   (let [o
         #_:clj-kondo/ignore
-        (proxy+ []
-                I4
-                (foo [this] :a)
-                (foo [this arg] (str arg "?")))]
+        (proxy+- []
+                 I4
+                 (foo [this] :a)
+                 (foo [this arg] (str arg "?")))]
     (is (= :a (.foo o)))
     (is (= "hello?" (.foo o "hello")))))
 
@@ -140,40 +140,40 @@
 (deftest same-method-name-different-param-types
   (let [o1
         #_:clj-kondo/ignore
-        (proxy+ []
-                I5
-                (foo [this ^String strArg] "other")
-                (foo [this ^Integer integerArg] "first"))
+        (proxy+- []
+                 I5
+                 (foo [this ^String strArg] "other")
+                 (foo [this ^Integer integerArg] "first"))
 
         sb
         (new StringBuilder)
 
         o2
         #_:clj-kondo/ignore
-        (proxy+ []
-                java.io.Writer
-                (write [this ^String str offset len]
-                       (.append sb "String overload")
-                       nil)
-                (write [this ^chars cbuf offset len]
-                       (.append sb "char[] overload")
-                       nil))
+        (proxy+- []
+                 java.io.Writer
+                 (write [this ^String str offset len]
+                        (.append sb "String overload")
+                        nil)
+                 (write [this ^chars cbuf offset len]
+                        (.append sb "char[] overload")
+                        nil))
 
         o3
         #_:clj-kondo/ignore
-        (proxy+ []
-                InterfaceA
-                (bar [this ^Integer x ^Integer y ^long z] "barA")
+        (proxy+- []
+                 InterfaceA
+                 (bar [this ^Integer x ^Integer y ^long z] "barA")
 
-                InterfaceB
-                (bar [this ^Integer x ^Integer y ^Integer z] "barB")
+                 InterfaceB
+                 (bar [this ^Integer x ^Integer y ^Integer z] "barB")
 
-                InterfaceC
-                (baz [this] 0)
-                (baz [this ^long p] 1)
-                (baz [this ^double p] 2)
-                (baz [this ^ints p] 3)
-                (baz [this ^chars p] 4))]
+                 InterfaceC
+                 (baz [this] 0)
+                 (baz [this ^long p] 1)
+                 (baz [this ^double p] 2)
+                 (baz [this ^ints p] 3)
+                 (baz [this ^chars p] 4))]
     (is (= "other" (.foo ^I5 o1 "bar")))
     (is (= "first" (.foo ^I5 o1 ^Integer (int 3))))
       ;; overloads of concrete Java Writer class
@@ -197,17 +197,17 @@
 (deftest inherited-test
   (let [o
         #_:clj-kondo/ignore
-        (proxy+ []
-                TestBaseClass2
-                (foo [this arg] (* 2 (count arg)))
-                (car [this] "inherited"))]
+        (proxy+- []
+                 TestBaseClass2
+                 (foo [this arg] (* 2 (count arg)))
+                 (car [this] "inherited"))]
     (is (= 12 (.foo o "biubiu")))
     (is (= "inherited" (.car o)))))
 
 (deftest named-proxy-test
   (let [o
         #_:clj-kondo/ignore
-        (proxy+ my-proxy [])]
+        (proxy+- my-proxy [])]
     (is (= (.getName (class o))
            "proxy_plus_minus.core_test.my_proxy"))))
 
@@ -218,7 +218,7 @@
 (deftest assignable-from-test
   (let [o
         #_:clj-kondo/ignore
-        (proxy+
+        (proxy+-
          []
          I6
          (foo [_this ^java.util.HashMap m] "woo")
@@ -240,7 +240,7 @@
 
   (testing "Check TestBaseClass3"
     (let [o
-          (proxy+ [] TestBaseClass3)]
+          (proxy+- [] TestBaseClass3)]
       (is (= 100 (.getInt o)))
       (is (= 0.0 (.getDouble o 1 2.0 "three" (.intValue 4) false)))
       (is (= 7.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
@@ -249,10 +249,10 @@
   (testing "Check TestBaseClass3 with overrides"
     (let [o
           #_:clj-kondo/ignore
-          (proxy+ [] TestBaseClass3
-                  (getInt [this] (.intValue 3))
-                  (getDouble [this a b c d e] 4.0)
-                  (getString [this a] "No"))]
+          (proxy+- [] TestBaseClass3
+                   (getInt [this] (.intValue 3))
+                   (getDouble [this a b c d e] 4.0)
+                   (getString [this a] "No"))]
       (is (= 200 (.getOtherInt o)))
       (is (= 3 (.getInt o)))
       (is (= 4.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
@@ -261,28 +261,28 @@
   (testing "Check proxy-super+"
     (let [o
           #_:clj-kondo/ignore
-          (proxy+ [] TestBaseClass3
-                  (getInt [this] (.intValue 3))
-                  (getDouble [this a b c d e] 4.0)
-                  (getString [this a] "No"))]
+          (proxy+- [] TestBaseClass3
+                   (getInt [this] (.intValue 3))
+                   (getDouble [this a b c d e] 4.0)
+                   (getString [this a] "No"))]
       (is (= 3 (.getInt o)))
-      (is (= 100 (proxy-super+ getInt o)))
+      (is (= 100 (proxy-super+- getInt o)))
       (is (= 4.0 (.getDouble o 1 2.0 "three" (.intValue 4) true)))
-      (is (= 0.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) false)))
-      (is (= 7.0 (proxy-super+ getDouble o 1 2.0 "three" (.intValue 4) true)))
+      (is (= 0.0 (proxy-super+- getDouble o 1 2.0 "three" (.intValue 4) false)))
+      (is (= 7.0 (proxy-super+- getDouble o 1 2.0 "three" (.intValue 4) true)))
       (is (= "No" (.getString o "Yes")))
-      (is (= "Yes" (proxy-super+ getString o "Yes"))))))
+      (is (= "Yes" (proxy-super+- getString o "Yes"))))))
 
 (deftest proxy+-hard-signatures-test
   (testing "Check a tricky edge case"
     (let [o
           #_:clj-kondo/ignore
-          (proxy+ [] TestBaseClass3
+          (proxy+- [] TestBaseClass3
                   ;; Impossible: "Only long and double primitives are supported"
-                  #_(trickyCase [this ^int a b] 8)
+                   #_(trickyCase [this ^int a b] 8)
                   ;; hard to test, but this is a demo of what an illegal method override does
-                  #_(trickyCase [this a b] [char java.lang.String :=> int] 8)
-                  (trickyCase [this a b] [int java.lang.String :=> int] 8)
-                  (trickyCase [this a b] [java.lang.Integer java.lang.String :=> int] 9))]
+                   #_(trickyCase [this a b] [char java.lang.String :=> int] 8)
+                   (trickyCase [this a b] [int java.lang.String :=> int] 8)
+                   (trickyCase [this a b] [java.lang.Integer java.lang.String :=> int] 9))]
       (is (= 8 (.trickyCase o ^int (.intValue 1) "Two")))
       (is (= 9 (.trickyCase o ^java.lang.Integer (.intValue 1) "Two"))))))

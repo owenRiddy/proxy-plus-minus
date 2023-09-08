@@ -1,8 +1,8 @@
 # proxy-plus-minus
 
-Nathan Marz built a great Proxy library called proxy+. This project is first and foremost a copy of that work. I'm aiming to make a few significant changes:
+Nathan Marz built a great Proxy library called [proxy-plus](https://github.com/redplanetlabs/proxy-plus). This project is first and foremost a copy of that work. I'm aiming to make a few significant changes:
 
-1. Lint & push code towards my prefered style. This is where the `minus` in the name is a factor - I'm pretty sure this will slow the code down.
+1. Lint & push code towards my preferred style. This is where the `minus` in the name is a factor - I'm pretty sure this will slow the code down.
 2. Despecialise the dependencies: No specter, generic https://asm.ow2.io/ ASM libraries so that the documentation is easier to look up (although RPL's Rama project does sound interesting).
 3. Support a (proxy-super+ ...) function/macro. Vanilla Clojure has a [crippling bug in proxy-super](https://clojure.atlassian.net/browse/CLJ-2201) and there is an opportunity here to work around it.
 
@@ -18,7 +18,7 @@ This library provides the macro `proxy+`. The first argument is fields to provid
 (ns example
   (:require [proxy-plus-minus.core :refer [proxy+ proxy-super+]]))
 
-(proxy+ [super-arg1 super-arg2]
+(proxy+- [super-arg1 super-arg2]
   BaseClass
   (foo [this] -1)
   (foo [this a b] (+ a b))
@@ -31,11 +31,18 @@ This library provides the macro `proxy+`. The first argument is fields to provid
 
 ;; TestBaseClass3 has a .getInt method that returns 100
 (let [o
-      (proxy+ []
+      (proxy+- []
         TestBaseClass3
         (getInt [this] (.intValue 3)))]
-  (is (= 100 (proxy-super+ getInt o))))
+  (is (= 100 (proxy-super+- getInt o))))
 ```
+
+## Naming
+
+> Isn't `proxy+-` a terrible name?
+> ~ Me
+
+Yes. This project contains several hacks and we all wish that clojure.core would fix up the `proxy-super` macro so that this wasn't necessary, or think of a way for to provide compiler support for the proxy-plus project. I've had trivial documentation PRs sit waiting for months to get in to Clojure website and I'd like a working `proxy-super` in September so this hack is the next best thing. But the name is a passive reminder that if any alternative library suits your use case then that is the preferred option.
 
 ## License
 
