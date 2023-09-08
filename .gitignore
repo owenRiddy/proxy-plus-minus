@@ -10,3 +10,8 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+
+.clj-kondo/.cache
+.clj-kondo/.lock
+.clj-kondo/inline-configs
+.lsp/
