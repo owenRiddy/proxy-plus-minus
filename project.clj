@@ -1,4 +1,4 @@
-(defproject cc.riddy/proxy-plus-minus "1.0.0-SNAPSHOT"
+(defproject cc.riddy/proxy-plus-minus "1.0.0"
   :description "A faster and more usable replacement for Clojure's proxy."
   :test-paths ["test/clj"]
   :dependencies [[org.clojure/clojure "1.10.0"]

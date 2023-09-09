@@ -1,5 +1,7 @@
 # proxy-plus-minus
 
+[![Clojars Project](https://img.shields.io/clojars/v/cc.riddy/proxy-plus-minus.svg)](https://clojars.org/cc.riddy/proxy-plus-minus)
+
 Nathan Marz built a great Proxy library called [proxy-plus](https://github.com/redplanetlabs/proxy-plus). This project is first and foremost a copy of that work. I'm aiming to make a few significant changes:
 
 1. Lint & push code towards my preferred style. This is where the `minus` in the name is a factor.
