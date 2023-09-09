@@ -13,6 +13,7 @@ pom.xml.asc
 
 .lsp/
 .clj-kondo/.*
+.clj-kondo/cc
 .clj-kondo/inline-configs
 .project
 .settings/
