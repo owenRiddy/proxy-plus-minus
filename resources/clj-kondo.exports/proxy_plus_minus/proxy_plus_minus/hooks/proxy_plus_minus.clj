@@ -1,4 +1,4 @@
-(ns hooks.proxy+-
+(ns hooks.proxy-plus-minus
   (:require [clj-kondo.hooks-api :as api]))
 
 (defn proxy+-

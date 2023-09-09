@@ -1,0 +1,2 @@
+{:hooks {:analyze-call {proxy-plus-minus.core/proxy+- hooks.proxy-plus-minus/proxy+-}}
+ :linters {:proxy-plus/superclass-args {:level :error}}}
