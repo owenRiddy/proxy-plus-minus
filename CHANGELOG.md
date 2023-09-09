@@ -1,3 +1,7 @@
+## 1.0.0
+
+* Fork from proxy-plus to implement `proxy-super+-` which was too hacky for quick inclusion in a respectable library.
+
 ## 0.0.10
 
 * Change to shaded ASM dependency

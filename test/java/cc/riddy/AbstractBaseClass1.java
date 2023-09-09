@@ -1,4 +1,4 @@
-package com.rpl;
+package cc.riddy;
 
 public abstract class AbstractBaseClass1 implements InterfaceD {
 

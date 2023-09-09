@@ -1,4 +1,4 @@
-package com.rpl;
+package cc.riddy;
 
 public interface InterfaceC {
   int baz();

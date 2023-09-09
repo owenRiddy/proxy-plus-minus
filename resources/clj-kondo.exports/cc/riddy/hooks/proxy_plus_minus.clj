@@ -1,27 +1,28 @@
-(ns hooks.proxy-plus
+(ns hooks.proxy-plus-minus
   (:require [clj-kondo.hooks-api :as api]))
 
-(defn proxy+
+(defn proxy+-
   [{:keys [node]}]
   (let [{:keys [children]}
         node
 
-        ;; Consume `proxy+` token
-        children (rest children)
+        ;; Consume `proxy+-` token
+        children
+        (rest children)
 
-        ;; Consume ClassNameSymbol. Not used for anything
-        name (if (-> children first api/token-node?)
+        ;; ClassNameSymbol. Not used for anything
+        name
+        (if (-> children first api/token-node?)
                 (first children)
                 nil)
-        children (if name (rest children) children)
 
-        ;; Consume super-args. We require:
-        superclass-args (first children)
-        impl-body (rest children)
+
+        [superclass-args & impl-body]
+        (if name (rest children) children)
 
         new-superclass
         (api/list-node
-          ;; Check with (new Baseclass arg1 arg2 ...)
+          ;; Check with (new java.lang.Object arg1 arg2 ...)
           (list*
             (api/token-node 'new)
             (api/token-node 'java.lang.Object)
@@ -33,12 +34,13 @@
             (api/token-node 'reify)
             impl-body))
 
-        new-node (api/list-node
+        new-node
+        (api/list-node
                    (list
                      (api/token-node 'do)
                      new-superclass
                      reify-node))]
-    ;; For linting purposes we macroexpand the proxy+ call to:
+    ;; For linting purposes we macroexpand the proxy+- call to:
     ;;
     ;; (do
     ;;   (new java.lang.Object ~@super-args)
@@ -59,6 +61,6 @@
     (when-not (api/vector-node? superclass-args)
       (api/reg-finding! (assoc (-> children first meta)
                           :message (format "Superclass arguments '%s' should be a vector" superclass-args)
-                          :type :proxy-plus/superclass-args)))
+                          :type :proxy-plus-minus/superclass-args)))
 
     {:node new-node}))

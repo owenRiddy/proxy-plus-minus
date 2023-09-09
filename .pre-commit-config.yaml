@@ -1,0 +1,22 @@
+repos:
+- repo: local
+  hooks:
+  - id: cljfmt
+    name: cljfmt
+    description: Linting Clojure files. This runs at Java-speed, I need to find a faster linter.
+    language: system
+    exclude: '.*'
+    always_run: true
+    entry: clojure
+    args: ['-Sdeps', '{:aliases {:cljfmt {:deps {io.github.weavejester/cljfmt {:git/tag "0.11.2"}}}}}', '-Tcljfmt', 'fix']
+- repo: https://github.com/clj-kondo/clj-kondo
+  rev: v2023.07.13
+  hooks:
+    - id: clj-kondo
+      description: Static analysis of Clojure files
+      files: '.*\.clj'
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.1.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer

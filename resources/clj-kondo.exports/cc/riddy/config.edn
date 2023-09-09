@@ -1,0 +1,2 @@
+{:hooks {:analyze-call {cc.riddy.proxy-plus-minus/proxy+- hooks.proxy-plus-minus/proxy+-}}
+ :linters {:proxy-plus-minus/superclass-args {:level :error}}}
