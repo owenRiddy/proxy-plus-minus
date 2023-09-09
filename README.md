@@ -16,7 +16,7 @@ This library provides the macro `proxy+-`. The first argument is fields to provi
 
 ```clj
 (ns example
-  (:require [proxy-plus-minus.core :refer [proxy+ proxy-super+]]))
+  (:require [cc.riddy.proxy-plus-minus :refer [proxy+- proxy-super+-]]))
 
 (proxy+- [super-arg1 super-arg2]
   BaseClass
@@ -40,7 +40,8 @@ This library provides the macro `proxy+-`. The first argument is fields to provi
 ## Naming
 
 > Isn't `proxy+-` a terrible name?
-~ Me
+
+> ~ Me
 
 Yes. This project contains several hacks and we all wish that clojure.core would fix up the `proxy-super` macro so that this wasn't necessary, or think of a way for to provide compiler support for the proxy-plus project. I've had trivial documentation PRs sit waiting for months to get in to Clojure website and I'd like a working `proxy-super` in September so this hack is the next best thing. But the name is a passive reminder that if any alternative library suits your use case then that is the preferred option.
 
